@@ -40,7 +40,7 @@
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
             <Label Text="1:57" TextColor="White" FontSize="12" Grid.Column="0" VerticalOptions="Center"/>
-            <ProgressBar Progress="0.6" Grid.Column="1" HeightRequest="4" BackgroundColor="White" ProgressColor="Magenta" VerticalOptions="Center"/>
+               <Slider Grid.Column="1" HeightRequest="4" BackgroundColor="White" ThumbColor="Magenta"  VerticalOptions="Center" MinimumTrackColor="Magenta" />
             <Label Text="3:15" TextColor="White" FontSize="12" Grid.Column="2" VerticalOptions="Center"/>
         </Grid>
         <HorizontalStackLayout HorizontalOptions="Center" Margin="0,70,0,0">
@@ -51,3 +51,4 @@
     </VerticalStackLayout>
 
 </ContentPage>
+
