@@ -6,9 +6,11 @@
     xmlns:local="clr-namespace:MauiApp2"
     Title="MauiApp2">
 
+    
     <ShellContent
         Shell.NavBarIsVisible="False"
         ContentTemplate="{DataTemplate local:MainPage}"
         Route="MainPage" />
+
 
 </Shell>
