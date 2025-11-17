@@ -1,174 +1,63 @@
-using CommunityToolkit.Maui.Media;
-using CommunityToolkit.Maui.Views;
-using System.Collections.ObjectModel;
-using System.Text.Json;
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+             x:Class="MauiApp2.MainPage"
+             BackgroundColor="#121212">
 
-namespace MauiApp2
-{
-    public partial class MainPage : ContentPage
-    {
-        private ObservableCollection<SongModel> _songs = new();
-        private readonly string _songsFilePath = Path.Combine(FileSystem.AppDataDirectory, "songs.json");
-        private int _currentIndex = -1;
+    <VerticalStackLayout Padding="20" Spacing="25">
 
-        public MainPage()
-        {
-            InitializeComponent();
-            SongsCollectionView.ItemsSource = _songs;
-            _ = LoadSongsAsync();
-        }
+        <ImageButton x:Name="Add" Source="plus.png" WidthRequest="2" HeightRequest="2" Clicked="Add_Clicked" HorizontalOptions="End"/>
 
-        private async void Add_Button_Clicked(object sender, EventArgs e)
-        {
-            try
-            {
-                var result = await FilePicker.PickMultipleAsync(new PickOptions
-                {
-                    PickerTitle = "Wybierz pliki muzyczne",
-                    FileTypes = new FilePickerFileType(new Dictionary<DevicePlatform, IEnumerable<string>>
-                    {
-                        { DevicePlatform.WinUI, new[] { ".mp3", ".wav", ".flac" } },
-                        { DevicePlatform.Android, new[] { "audio/*" } },
-                        { DevicePlatform.iOS, new[] { "public.audio" } }
-                    })
-                });
+        <Border Stroke="White" StrokeThickness="1" HeightRequest="300" WidthRequest="300" HorizontalOptions="Center">
+            <Border.StrokeShape>
+                <RoundRectangle CornerRadius="20"/>
+            </Border.StrokeShape>
+            <Image Source="arianagrande.png" />
+        </Border>
 
-                if (result != null)
-                {
-                    foreach (var file in result)
-                    {
-                        _songs.Add(new SongModel
-                        {
-                            Title = Path.GetFileNameWithoutExtension(file.FileName),
-                            Path = file.FullPath
-                        });
-                    }
-                }
-                await SaveSongsAsync();
-            }
-            catch (Exception ex)
-            {
-                await DisplayAlert("Błąd", $"Nie udało się wybrać plików: {ex.Message}", "OK");
-            }
-        }
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="0.7*"/>
+                <ColumnDefinition Width="0.3*"/>
+            </Grid.ColumnDefinitions>
+            <VerticalStackLayout Grid.Column="0" Grid.Row="0">
+                <Label x:Name="AktualnaPiosenka" Text="Brak utworu" FontSize="24" TextColor="White" FontAttributes="Bold" />
+                <Label Text="Imię Nazwisko" FontSize="16" TextColor="White" Opacity="0.7" />
+            </VerticalStackLayout>
+            <ImageButton x:Name="shuffle" Source="shuffle.png" WidthRequest="30" HeightRequest="30" Grid.Column="1" Grid.Row="0" Clicked="shuffle_Clicked"/>
+        </Grid>
 
-        private async Task SaveSongsAsync()
-        {
-            try
-            {
-                var json = JsonSerializer.Serialize(_songs);
-                await File.WriteAllTextAsync(_songsFilePath, json);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Błąd zapisu piosenek: {ex.Message}");
-            }
-        }
+        <CollectionView x:Name="ListaPiosenek" HeightRequest="100">
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Label Text="{Binding Title}" TextColor="White" FontSize="14" Padding="5"/>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
 
-        private async Task LoadSongsAsync()
-        {
-            try
-            {
-                if (File.Exists(_songsFilePath))
-                {
-                    var json = await File.ReadAllTextAsync(_songsFilePath);
-                    var loadedSongs = JsonSerializer.Deserialize<ObservableCollection<SongModel>>(json);
+        
+        <toolkit:MediaElement x:Name="Odtwarzacz" HeightRequest="0" WidthRequest="0" ShouldKeepScreenOn="True" />
+        
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <Label Text="1:57" TextColor="White" FontSize="12" Grid.Column="0" VerticalOptions="Center" />
+            <Slider Grid.Column="1" HeightRequest="4" BackgroundColor="White" ThumbColor="Magenta" VerticalOptions="Center" MinimumTrackColor="Magenta" />
+            <Label Text="3:15" TextColor="White" FontSize="12" Grid.Column="2" VerticalOptions="Center"/>
+        </Grid>
 
-                    if (loadedSongs != null)
-                    {
-                        _songs.Clear();
-                        foreach (var song in loadedSongs)
-                            _songs.Add(song);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Błąd odczytu piosenek: {ex.Message}");
-            }
-        }
+        <HorizontalStackLayout HorizontalOptions="Center" Margin="0,70,0,0">
+            <ImageButton x:Name="cofnij" Source="cofnij.png" WidthRequest="70" HeightRequest="70" Margin="10" Clicked="cofnij_Clicked"/>
+            <ImageButton x:Name="pauza" Source="pauza.png" WidthRequest="95" HeightRequest="95" Margin="10" Clicked="pauza_Clicked"/>
+            <ImageButton x:Name="dalej" Source="dalej.png" WidthRequest="70" HeightRequest="70" Margin="10" Clicked="dalej_Clicked"/>
+        </HorizontalStackLayout>
 
-        private void PlayCurrentSong()
-        {
-            if (_currentIndex < 0 || _currentIndex >= _songs.Count) return;
-
-            Player.Source = _songs[_currentIndex].Path;
-            Player.Play();
-            CurrentSongLabel.Text = $"▶ {_songs[_currentIndex].Title}";
-        }
-
-        private void PauseButton_Clicked(object sender, EventArgs e)
-        {
-            if (_currentIndex < 0 || _currentIndex >= _songs.Count) return;
-
-            if (Player.CurrentState == MediaElementState.Playing)
-            {
-                Player.Pause();
-                CurrentSongLabel.Text = $"⏸ {_songs[_currentIndex].Title}";
-            }
-            else if (Player.CurrentState == MediaElementState.Paused)
-            {
-                Player.Play();
-                CurrentSongLabel.Text = $"▶ {_songs[_currentIndex].Title}";
-            }
-            else
-            {
-                DisplayAlert("Info", "Brak odtwarzania do wznowienia.", "OK");
-            }
-        }
-
-        private void NextButton_Clicked(object sender, EventArgs e)
-        {
-            if (_songs.Count == 0) return;
-            _currentIndex = (_currentIndex + 1) % _songs.Count;
-            PlayCurrentSong();
-        }
-
-        private void PrevButton_Clicked(object sender, EventArgs e)
-        {
-            if (_songs.Count == 0) return;
-            _currentIndex = (_currentIndex - 1 + _songs.Count) % _songs.Count;
-            PlayCurrentSong();
-        }
-
-        private void ShuffleButton_Clicked(object sender, EventArgs e)
-        {
-            if (_songs.Count == 0) return;
-            var random = new Random();
-            _currentIndex = random.Next(_songs.Count);
-            PlayCurrentSong();
-        }
-
-        private async void DeleteButton_Clicked(object sender, EventArgs e)
-        {
-            if (sender is ImageButton button && button.CommandParameter is SongModel song)
-            {
-                bool confirm = await DisplayAlert("Usuń utwór", $"Czy na pewno chcesz usunąć \"{song.Title}\"?", "Tak", "Nie");
-                if (confirm)
-                {
-                    int indexToRemove = _songs.IndexOf(song);
-                    _songs.Remove(song);
-
-                    if (indexToRemove == _currentIndex)
-                    {
-                        Player.Stop();
-                        CurrentSongLabel.Text = "Brak utworu";
-                        _currentIndex = -1;
-                    }
-                    else if (indexToRemove < _currentIndex)
-                    {
-                        _currentIndex--;
-                    }
-
-                    await SaveSongsAsync();
-                }
-            }
-        }
-    }
-
-    public class SongModel
-    {
-        public string Title { get; set; } = string.Empty;
-        public string Path { get; set; } = string.Empty;
-    }
-}
+    </VerticalStackLayout>
+</ContentPage>
