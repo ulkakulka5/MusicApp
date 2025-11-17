@@ -1,8 +1,7 @@
-using CommunityToolkit.Maui.Core;
-using CommunityToolkit.Maui.Media;
-using CommunityToolkit.Maui.Views;
 using System.Collections.ObjectModel;
 using System.Text.Json;
+using CommunityToolkit.Maui.Views;
+using CommunityToolkit.Maui.Media;
 
 namespace MauiApp2
 {
@@ -15,11 +14,11 @@ namespace MauiApp2
         public MainPage()
         {
             InitializeComponent();
-            SongsCollectionView.ItemsSource = _songs;
-            _ = LoadSongsAsync();
+            ListaPiosenek.ItemsSource = _songs;
+            _ = WczytajPiosenkiAsync();
         }
 
-        private async void Add_Button_Clicked(object sender, EventArgs e)
+        private async void Add_Clicked(object sender, EventArgs e)
         {
             try
             {
@@ -45,7 +44,7 @@ namespace MauiApp2
                         });
                     }
                 }
-                await SaveSongsAsync();
+                await ZapiszPiosenkiAsync();
             }
             catch (Exception ex)
             {
@@ -53,7 +52,7 @@ namespace MauiApp2
             }
         }
 
-        private async Task SaveSongsAsync()
+        private async Task ZapiszPiosenkiAsync()
         {
             try
             {
@@ -66,7 +65,7 @@ namespace MauiApp2
             }
         }
 
-        private async Task LoadSongsAsync()
+        private async Task WczytajPiosenkiAsync()
         {
             try
             {
@@ -89,28 +88,39 @@ namespace MauiApp2
             }
         }
 
-        private void PlayCurrentSong()
+     private void dalej_Clicked(object sender, EventArgs e)
         {
-            if (_currentIndex < 0 || _currentIndex >= _songs.Count) return;
+            if (_songs.Count == 0) return;
+            if (_currentIndex < _songs.Count - 1) _currentIndex++;
+            else _currentIndex = 0;
 
-            Player.Source = _songs[_currentIndex].Path;
-            Player.Play();
-            CurrentSongLabel.Text = $"▶ {_songs[_currentIndex].Title}";
+            Odtwarzacz.Source = _songs[_currentIndex].Path;
+            Odtwarzacz.Play();
+            AktualnaPiosenka.Text = $"{_songs[_currentIndex].Title}";
         }
 
-        private void PauseButton_Clicked(object sender, EventArgs e)
+        private void cofnij_Clicked(object sender, EventArgs e)
         {
-            if (_currentIndex < 0 || _currentIndex >= _songs.Count) return;
+            if (_songs.Count == 0) return;
+            if (_currentIndex > 0) _currentIndex--;
+            else _currentIndex = _songs.Count - 1;
 
-            if (Player.CurrentState == MediaElementState.Playing)
+            Odtwarzacz.Source = _songs[_currentIndex].Path;
+            Odtwarzacz.Play();
+            AktualnaPiosenka.Text = $"{_songs[_currentIndex].Title}";
+        }
+
+        private void pauza_Clicked(object sender, EventArgs e)
+        {
+            if (Odtwarzacz.CurrentState == MediaElementState.Playing)
             {
-                Player.Pause();
-                CurrentSongLabel.Text = $"⏸ {_songs[_currentIndex].Title}";
+                Odtwarzacz.Pause();
+                AktualnaPiosenka.Text = $"{_songs[_currentIndex].Title}";
             }
-            else if (Player.CurrentState == MediaElementState.Paused)
+            else if (Odtwarzacz.CurrentState == MediaElementState.Paused)
             {
-                Player.Play();
-                CurrentSongLabel.Text = $"▶ {_songs[_currentIndex].Title}";
+                Odtwarzacz.Play();
+                AktualnaPiosenka.Text = $"{_songs[_currentIndex].Title}";
             }
             else
             {
@@ -118,58 +128,15 @@ namespace MauiApp2
             }
         }
 
-        private void NextButton_Clicked(object sender, EventArgs e)
-        {
-            if (_songs.Count == 0) return;
-            _currentIndex = (_currentIndex + 1) % _songs.Count;
-            PlayCurrentSong();
-        }
-
-        private void PrevButton_Clicked(object sender, EventArgs e)
-        {
-            if (_songs.Count == 0) return;
-            _currentIndex = (_currentIndex - 1 + _songs.Count) % _songs.Count;
-            PlayCurrentSong();
-        }
-
-        private void ShuffleButton_Clicked(object sender, EventArgs e)
+        private void shuffle_Clicked(object sender, EventArgs e)
         {
             if (_songs.Count == 0) return;
             var random = new Random();
             _currentIndex = random.Next(_songs.Count);
-            PlayCurrentSong();
-        }
 
-        private async void DeleteButton_Clicked(object sender, EventArgs e)
-        {
-            if (sender is ImageButton button && button.CommandParameter is SongModel song)
-            {
-                bool confirm = await DisplayAlert("Usuń utwór", $"Czy na pewno chcesz usunąć \"{song.Title}\"?", "Tak", "Nie");
-                if (confirm)
-                {
-                    int indexToRemove = _songs.IndexOf(song);
-                    _songs.Remove(song);
-
-                    if (indexToRemove == _currentIndex)
-                    {
-                        Player.Stop();
-                        CurrentSongLabel.Text = "Brak utworu";
-                        _currentIndex = -1;
-                    }
-                    else if (indexToRemove < _currentIndex)
-                    {
-                        _currentIndex--;
-                    }
-
-                    await SaveSongsAsync();
-                }
-            }
-        }
-    }
-
-    public class SongModel
-    {
-        public string Title { get; set; } = string.Empty;
-        public string Path { get; set; } = string.Empty;
+            Odtwarzacz.Source = _songs[_currentIndex].Path;
+            Odtwarzacz.Play();
+            AktualnaPiosenka.Text = $"{_songs[_currentIndex].Title}";
+        }*/
     }
 }
